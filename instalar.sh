@@ -71,4 +71,4 @@ sudo ufw enable
 echo "11. Iniciant Odoo"
 cd /opt/odoo/odoo
 ./odoo-bin -c ./debian/odoo.conf &
-echo "✅ Odoo s'està executant. Obre el navegador a http://<IP>:8069"
+echo "Odoo s'està executant. Obre el navegador a http://<IP>:8069"
