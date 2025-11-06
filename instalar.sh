@@ -17,10 +17,11 @@ sleep 3
 
 # --- Comprovar si ya esta instalao ---
 if [ -d "$ODOO_DIR" ] || [ -f "$ODOO_CONF" ]; then
-  echo "S'ha detectat una instal·lació existent d'Odoo."
-  read -p "Vols eliminar TOT i reinstal·lar? (això esborrarà les dades actuals) [s/N]: " confirm
+  echo "Se ha encotrado una instalacion anterior."
+  read -p "Quieres eliminar la instalacion anterior? [s/n]: " confirm
+  confirm=${confirm:-s}
   if [[ "$confirm" =~ ^[sS]$ ]]; then
-    echo "Eliminant instal·lació anterior..."
+    echo "Eliminando instalacion anterior..."
     sudo systemctl stop odoo 2>/dev/null || true
     sudo systemctl disable odoo 2>/dev/null || true
     sudo rm -rf "$ODOO_DIR" "$ODOO_CONF" "$ODOO_SERVICE" /var/log/odoo
@@ -28,12 +29,13 @@ if [ -d "$ODOO_DIR" ] || [ -f "$ODOO_CONF" ]; then
       sudo -u postgres psql -c "DROP DATABASE ${DB_NAME};" || true
     sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}'" | grep -q 1 && \
       sudo -u postgres psql -c "DROP ROLE ${DB_USER};" || true
-    echo "Instal·lació anterior eliminada completament."
+    echo "Instalacion anterior eliminada."
   else
-    echo "Instal·lació cancel·lada per l'usuari."
+    echo "Instalacion cancelada por el usuario."
     exit 0
   fi
 fi
+
 
 # --- 1. Actualitzar el sistema ---
 echo "1. Actualizando el sistema..."
