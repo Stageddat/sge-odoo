@@ -11,7 +11,7 @@ DB_NAME="odoo_bd"
 DB_USER="odoo"
 
 echo "==============================================================="
-echo " Instalator automatico de tu madre"
+echo " Instalator automatico de tu madre v0.3"
 echo "==============================================================="
 sleep 3
 
