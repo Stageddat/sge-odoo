@@ -17,33 +17,24 @@ sleep 3
 
 # --- Comprovar si ya esta instalao ---
 if [ -d "$ODOO_DIR" ] || [ -f "$ODOO_CONF" ]; then
-  echo "Se ha detectado una instalación existente de Odoo."
-  while true; do
-    read -p "¿Deseas eliminar TODO y reinstalar? (esto borrará todos los datos actuales) [s/n]: " confirm
-    case "$confirm" in
-      [sS])
-        echo "Eliminando instalación anterior..."
-        sudo systemctl stop odoo 2>/dev/null || true
-        sudo systemctl disable odoo 2>/dev/null || true
-        sudo rm -rf "$ODOO_DIR" "$ODOO_CONF" "$ODOO_SERVICE" /var/log/odoo
-        sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'" | grep -q 1 && \
-          sudo -u postgres psql -c "DROP DATABASE ${DB_NAME};" || true
-        sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}'" | grep -q 1 && \
-          sudo -u postgres psql -c "DROP ROLE ${DB_USER};" || true
-        echo "Instalación anterior eliminada completamente."
-        break
-        ;;
-      [nN])
-        echo "Instalación cancelada por el usuario."
-        exit 0
-        ;;
-      *)
-        echo "Por favor, responde 's' para sí o 'n' para no."
-        ;;
-    esac
-  done
+  echo "Se ha encotrado una instalacion anterior."
+  read -p "Quieres eliminar la instalacion anterior? [s/n]: " confirm
+  confirm=${confirm:-s}
+  if [[ "$confirm" =~ ^[sS]$ ]]; then
+    echo "Eliminando instalacion anterior..."
+    sudo systemctl stop odoo 2>/dev/null || true
+    sudo systemctl disable odoo 2>/dev/null || true
+    sudo rm -rf "$ODOO_DIR" "$ODOO_CONF" "$ODOO_SERVICE" /var/log/odoo
+    sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'" | grep -q 1 && \
+      sudo -u postgres psql -c "DROP DATABASE ${DB_NAME};" || true
+    sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}'" | grep -q 1 && \
+      sudo -u postgres psql -c "DROP ROLE ${DB_USER};" || true
+    echo "Instalacion anterior eliminada."
+  else
+    echo "Instalacion cancelada por el usuario."
+    exit 0
+  fi
 fi
-
 
 
 # --- 1. Actualitzar el sistema ---
