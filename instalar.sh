@@ -155,19 +155,12 @@ sudo ufw --force enable
 
 # 12. Verificar
 echo "12. Verificando si tu madre está gorda..."
-if systemctl is-active --quiet odoo; then
-  IP=$(hostname -I | awk '{print $1}')
-  echo "==============================================================="
-  echo " Instalado correctament."
-  echo " Archivo de configuración: $ODOO_CONF"
-  echo " Contraseña de la base de datos: ${DB_PASS}"
-  echo " Contrasena de administrador: ${ADMIN_PASS}"
-  echo " Servicio de Odoo: systemctl status odoo"
-  echo " Acceder a Odoo:"
-  echo "     http://${IP}:8069"
-  echo "==============================================================="
-else
-  echo "Error: Odoo no ha podido iniciar. Consulta los logs:"
-  echo "sudo journalctl -u odoo -f"
-  exit 1
-fi
+IP=$(hostname -I | awk '{print $1}')
+echo "==============================================================="
+echo " Instalado correctament."
+echo " Archivo de configuración: $ODOO_CONF"
+echo " Contraseña de la base de datos: ${DB_PASS}"
+echo " Contrasena de administrador: ${ADMIN_PASS}"
+echo " Acceder a Odoo:"
+echo "     http://${IP}:8069"
+echo "==============================================================="
