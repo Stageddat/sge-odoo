@@ -8,34 +8,39 @@ IFS=$'\n\t'
 ODOO_DIR="/opt/odoo/odoo"
 ODOO_CONF="/etc/odoo.conf"
 ODOO_SERVICE="/etc/systemd/system/odoo.service"
-DB_NAME="odoo_bd"
+DB_NAME="ODOO_BD"
 DB_USER="odoo"
+LINUX_USER="isard"
 
 echo "==============================================================="
-echo " Instalador automático de tu madre 3000 v0.4"
+echo " Instalador automático de terrenaitor 3000 v0.4"
 echo " Descargar e instalar Odoo 19 SGE automáticamente"
 echo "==============================================================="
 sleep 3
 
 #  Comprobar si ya está instalado 
 if [ -d "$ODOO_DIR" ] || [ -f "$ODOO_CONF" ]; then
-  echo "Se ha encontrado una instalación anterior."
-  read -p "Quieres eliminar la instalación anterior? [s/n]: " confirm
-  confirm=${confirm:-s}
-  if [[ "$confirm" =~ ^[sS]$ ]]; then
-    echo "Eliminando instalacion anterior..."
-    sudo systemctl stop odoo 2>/dev/null || true
-    sudo systemctl disable odoo 2>/dev/null || true
-    sudo rm -rf "$ODOO_DIR" "$ODOO_CONF" "$ODOO_SERVICE" /var/log/odoo
-    sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'" | grep -q 1 && \
-      sudo -u postgres psql -c "DROP DATABASE ${DB_NAME};" || true
-    sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}'" | grep -q 1 && \
-      sudo -u postgres psql -c "DROP ROLE ${DB_USER};" || true
-    echo "Instalación anterior eliminada."
-  else
-    echo "Instalación cancelada por el usuario."
-    exit 0
-  fi
+    echo "Se ha detectado una instalación anterior."
+    read -p "¿Quieres eliminar la instalación anterior? [s/N]: " confirm
+    confirm=${confirm:-N}
+    if [[ "$confirm" =~ ^[sS]$ ]]; then
+        echo "Eliminando instalación anterior..."
+        sudo systemctl stop odoo 2>/dev/null || true
+        sudo systemctl disable odoo 2>/dev/null || true
+        [ -d "$ODOO_DIR" ] && sudo rm -rf "$ODOO_DIR"
+        [ -f "$ODOO_CONF" ] && sudo rm -f "$ODOO_CONF"
+        [ -d "/var/log/odoo" ] && sudo rm -rf /var/log/odoo
+        if sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -qw "$DB_NAME"; then
+            sudo -u postgres psql -c "DROP DATABASE $DB_NAME;"
+        fi
+        if sudo -u postgres psql -c "\du" | cut -d \| -f 1 | grep -qw "$DB_USER"; then
+            sudo -u postgres psql -c "DROP ROLE $DB_USER;"
+        fi
+        echo "Instalación anterior eliminada."
+    else
+        echo "Instalación cancelada."
+        exit 0
+    fi
 fi
 
 
@@ -86,7 +91,10 @@ fi
 # 6. Descargar Odoo
 echo "6. Descargar Odoo 19..."
 sudo git clone --depth 1 --branch 19.0 https://github.com/odoo/odoo.git "$ODOO_DIR"
-sudo chown -R "$USER":"$USER" /opt/odoo
+
+# Fix: crear y configurar logs de odoo
+sudo mkdir -p /var/log/odoo
+sudo chown -R "$LINUX_USER":"$LINUX_USER" /var/log/odoo
 sudo chmod -R 755 /opt/odoo
 
 # 7. Crear venv
@@ -110,6 +118,9 @@ fi
 # 9. Configurar odoo.conf
 echo "9. Configurando archivo /etc/odoo.conf..."
 sudo mkdir -p /var/log/odoo
+# Fix: Configurar permisos de la carpeta
+sudo chown -R "$LINUX_USER":"$LINUX_USER" /opt/odoo
+sudo chmod -R 755 /var/log/odoo
 
 sudo tee "$ODOO_CONF" > /dev/null <<EOL
 [options]
@@ -126,35 +137,35 @@ EOL
 sudo chmod 640 "$ODOO_CONF"
 
 # 10. Crear systemd
-echo "10. Creando sistema systemd para Odoo..."
-sudo tee "$ODOO_SERVICE" > /dev/null <<EOL
-[Unit]
-Description=Servei Odoo 19
-After=network.target postgresql.service
+# echo "10. Creando sistema systemd para Odoo..."
+# sudo tee "$ODOO_SERVICE" > /dev/null <<EOL
+# [Unit]
+# Description=Servei Odoo 19
+# After=network.target postgresql.service
 
-[Service]
-User=$USER
-Group=$USER
-ExecStart=/opt/odoo/odoo/venv/bin/python3 /opt/odoo/odoo/odoo-bin -c /etc/odoo.conf
-Restart=always
+# [Service]
+# User=$USER
+# Group=$USER
+# ExecStart=/opt/odoo/odoo/venv/bin/python3 /opt/odoo/odoo/odoo-bin -c /etc/odoo.conf
+# Restart=always
 
-[Install]
-WantedBy=multi-user.target
-EOL
+# [Install]
+# WantedBy=multi-user.target
+# EOL
 
-sudo systemctl daemon-reload
-sudo systemctl enable odoo
-sudo systemctl start odoo
+# sudo systemctl daemon-reload
+# sudo systemctl enable odoo
+# sudo systemctl start odoo
 
 # 11. Configurar UFW
-echo "11. Configurando UFW..."
-sudo ufw allow 8069
-sudo ufw allow 80/tcp
-sudo ufw allow ssh
-sudo ufw --force enable
+# echo "11. Configurando UFW..."
+# sudo ufw allow 8069
+# sudo ufw allow 80/tcp
+# sudo ufw allow ssh
+# sudo ufw --force enable
 
 # 12. Verificar
-echo "12. Verificando si tu madre está gorda..."
+echo "12. Verificando si tengo hambre..."
 IP=$(hostname -I | awk '{print $1}')
 echo "==============================================================="
 echo " Instalado correctament."
